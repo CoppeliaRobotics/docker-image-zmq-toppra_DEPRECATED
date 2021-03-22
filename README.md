@@ -25,16 +25,32 @@ docker start zmq-toppra
 ```lua
 local context=simZMQ.ctx_new()
 local socket=simZMQ.socket(context,simZMQ.REQ)
-simZMQ.connect(socket,'tcp://localhost:22505')
+local result=simZMQ.connect(socket,'tcp://localhost:22505')
+if result==-1 then
+    local err=simZMQ.errnum()
+    error('connect failed: '..err..': '..simZMQ.strerror(err))
+end
 local json=require'dkjson'
-simZMQ.send(socket,json.encode{
+print('sending request...')
+local result=simZMQ.send(socket,json.encode{
     samples=100,
     ss_waypoints={0,0.5,1},
     waypoints={{0,0},{0,1},{1,1}},
     velocity_limits={{-0.5,0.5},{-0.5,0.5}},
     acceleration_limits={{-0.05,0.05},{-0.05,0.05}}
 },0)
-local r=json.decode(simZMQ.recv(socket,0,16000000))
+if result==-1 then
+    local err=simZMQ.errnum()
+    error('send failed: '..err..': '..simZMQ.strerror(err))
+end
+print('waiting response...')
+local result,data=simZMQ.recv(socket,0,16000000)
+if result==-1 then
+    local err=simZMQ.errnum()
+    error('recv failed: '..err..': '..simZMQ.strerror(err))
+end
+print('received:')
+local r=json.decode(data)
 print(r.ts)
 print(r.qs)
 print(r.qds)

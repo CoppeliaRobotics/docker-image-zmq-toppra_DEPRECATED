@@ -51,8 +51,8 @@ if result==-1 then
     local err=simZMQ.errnum()
     error('msg_recv failed: '..err..': '..simZMQ.strerror(err))
 end
-local result,data=simZMQ.msg_data(msg)
-if result==-1 then
+local data=simZMQ.msg_data(msg)
+if not data then
     error('msg_data failed')
 end
 simZMQ.msg_close(msg)

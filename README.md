@@ -44,11 +44,19 @@ if result==-1 then
     error('send failed: '..err..': '..simZMQ.strerror(err))
 end
 print('waiting response...')
-local result,data=simZMQ.recv(socket,0,16000000)
+local msg=simZMQ.msg_new()
+simZMQ.msg_init(msg)
+local result=simZMQ.msg_recv(msg,socket,0)
 if result==-1 then
     local err=simZMQ.errnum()
-    error('recv failed: '..err..': '..simZMQ.strerror(err))
+    error('msg_recv failed: '..err..': '..simZMQ.strerror(err))
 end
+local result,data=simZMQ.msg_data(msg)
+if result==-1 then
+    error('msg_data failed')
+end
+simZMQ.msg_close(msg)
+simZMQ.msg_destroy(msg)
 print('received:')
 local r=json.decode(data)
 print(r.ts)

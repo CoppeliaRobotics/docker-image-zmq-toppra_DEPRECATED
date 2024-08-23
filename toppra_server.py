@@ -11,9 +11,16 @@ context = zmq.Context()
 socket = context.socket(zmq.REP)
 socket.bind('tcp://*:22505')
 
+def rs(a):
+    flattened = [item for sublist in a for item in sublist]
+    reshaped_matrix = [flattened[i:i + 2] for i in range(0, len(flattened), 2)]
+    return reshaped_matrix
+    
 def cb(req):
     print(req)
     coefficients = ta.SplineInterpolator(req['ss_waypoints'], req['waypoints'], req.get('bc_type', 'not-a-knot'))
+    req['velocity_limits'] = rs(req['velocity_limits'])
+    req['acceleration_limits'] = rs(req['acceleration_limits'])
     pc_vel = constraint.JointVelocityConstraint(req['velocity_limits'])
     pc_acc = constraint.JointAccelerationConstraint(req['acceleration_limits'], discretization_scheme=constraint.DiscretizationType.Interpolation)
     instance = algo.TOPPRA([pc_vel, pc_acc], coefficients, solver_wrapper='seidel')
